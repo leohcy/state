@@ -11,6 +11,7 @@ class Kohana {
     public static $errors = TRUE;
     public static $content_type = 'text/html';
     public static $charset = 'utf-8';
+    public static $safe_mode = FALSE;
     public static $magic_quotes = FALSE;
     public static $shutdown_errors = array(E_PARSE, E_ERROR, E_USER_ERROR);
     protected static $_init = FALSE;
@@ -47,14 +48,15 @@ class Kohana {
             Kohana::$profiling = (bool)$settings['profile'];
         if (isset($settings['errors']))
             Kohana::$errors = (bool)$settings['errors'];
+        spl_autoload_register(array('Kohana', 'auto_load'));
+        register_shutdown_function(array('Kohana', 'shutdown_handler'));
         if (Kohana::$errors === TRUE) {
             set_exception_handler(array('Kohana_Exception', 'handler'));
             set_error_handler(array('Kohana', 'error_handler'));
         }
-        spl_autoload_register(array('Kohana', 'auto_load'));
-        register_shutdown_function(array('Kohana', 'shutdown_handler'));
         if (function_exists('mb_internal_encoding'))
             mb_internal_encoding(Kohana::$charset);
+        Kohana::$safe_mode = (bool) ini_get('safe_mode');
         Kohana::$magic_quotes = (bool) get_magic_quotes_gpc();
         $_GET = Kohana::sanitize($_GET);
         $_POST = Kohana::sanitize($_POST);
@@ -107,6 +109,8 @@ class Kohana {
     public static function find_file($dir, $file, $ext = NULL, $array = FALSE) {
         $ext = ($ext === NULL) ? '.php' : ($ext ? ".{$ext}" : '');
         $path = $dir.DIRECTORY_SEPARATOR.$file.$ext;
+        if (Kohana::$profiling === TRUE AND class_exists('Profiler', FALSE))
+            $benchmark = Profiler::start('Kohana', __FUNCTION__);
         if ($array) {
             $found = array();
             foreach (array_reverse(Kohana::$_paths) as $dir)
@@ -121,6 +125,8 @@ class Kohana {
                 }
             }
         }
+        if (isset($benchmark))
+            Profiler::stop($benchmark);
         return $found;
     }
 
@@ -179,6 +185,21 @@ class Kohana {
                 $value = str_replace(array("\r\n", "\r"), "\n", $value);
         }
         return $value;
+    }
+
+}
+
+if (!function_exists('__')) {
+    /**
+     * Kohana translation function. The PHP function
+     * [strtr](http://php.net/strtr) is used for replacing parameters.
+     *    __('Welcome back, :user', array(':user' => $username));
+     * @param   string  text to translate
+     * @param   array   values to replace in the translated text
+     * @return  string
+     */
+    function __($string, array $values = NULL) {
+        return empty($values) ? $string : strtr($string, $values);
     }
 
 }

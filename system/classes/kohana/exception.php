@@ -18,7 +18,7 @@ class Kohana_Exception extends Exception {
     /**
      * @var  string  error rendering view
      */
-    public static $error_view = 'error';
+    public static $error_view = 'kohana/error';
 
     /**
      * @var  string  error view content type
@@ -41,6 +41,9 @@ class Kohana_Exception extends Exception {
             // E_DEPRECATED only exists in PHP >= 5.3.0
             Kohana_Exception::$php_errors[E_DEPRECATED] = 'Deprecated';
         }
+
+        // Set the message
+        $message = __($message, $variables);
 
         // Pass the message and integer code to the parent
         parent::__construct($message, (int)$code);
