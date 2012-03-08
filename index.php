@@ -9,8 +9,7 @@
  * deprecated notices. Disable with: E_ALL & ~E_DEPRECATED
  */
 error_reporting(E_ALL | E_STRICT);
-date_default_timezone_set('Asia/Shanghai');
-setlocale(LC_ALL, 'zh_CN.utf-8');
+
 define('KOHANA_START_TIME', microtime(TRUE));
 define('KOHANA_START_MEMORY', memory_get_usage());
 
