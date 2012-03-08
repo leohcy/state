@@ -2,10 +2,8 @@
 
 class Controller_Welcome extends Controller {
 
-	public function action_index()
-	{
-		//$this->response->body('hello, world!');
-        echo View::factory('kohana/profiler');
-	}
+    public function action_index() {
+        $this->response->body(View::factory('kohana/profiler'));
+    }
 
 } // End Welcome
