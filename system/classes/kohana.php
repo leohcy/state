@@ -209,9 +209,24 @@ class Kohana {
      * Adds a message to the log with NOTICE level.
      * @param   string  message body
      * @param   array   values to replace in the message
+     * @param   Exception   exception to be handled
      */
-    public static function notice($message, array $values = NULL) {
+    public static function notice($message, array $values = NULL, Exception $e = NULL) {
+        if (isset($e))
+            $message .= PHP_EOL.Kohana_Exception::text($e);
         Kohana::$log->add(Log::NOTICE, $message, $values);
+    }
+
+    /**
+     * Adds a message to the log with WARNING level.
+     * @param   string  message body
+     * @param   array   values to replace in the message
+     * @param   Exception   exception to be handled
+     */
+    public static function warning($message, array $values = NULL, Exception $e = NULL) {
+        if (isset($e))
+            $message .= PHP_EOL.Kohana_Exception::text($e);
+        Kohana::$log->add(Log::WARNING, $message, $values);
     }
 
 }

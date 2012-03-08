@@ -206,7 +206,7 @@ class Log {
 
 				foreach ($messages as $message)
 				{
-					if (in_array($message['level'], $writer['levels']))
+					if (in_array($message[':level'], $writer['levels']))
 					{
 						// Writer accepts this kind of message
 						$filtered[] = $message;
