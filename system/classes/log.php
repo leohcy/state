@@ -137,13 +137,29 @@ class Log {
 			// Insert the values into the message
 			$message = strtr($message, $values);
 		}
+        
+        $file = 'PHP internal call';
+        $line = -1;
+        $trace = debug_backtrace();
+        do {
+            $hop = array_shift($trace);
+        } while(!isset($hop['function']));
+        $nextHop = array_shift($trace);
+        if (isset($nextHop) && isset($nextHop['class']) && $nextHop['class'] === 'Kohana')
+            $hop = $nextHop;
+        if (isset($hop['file']))
+            $file = $hop['file'];
+        if (isset($hop['line']))
+            $line = $hop['line'];
 
 		// Create a new message and timestamp it
 		$this->_messages[] = array
 		(
-			'time'  => Date::formatted_time('now', Log::$timestamp, Log::$timezone),
-			'level' => $level,
-			'body'  => $message,
+			':time'  => Date::formatted_time('now', Log::$timestamp, Log::$timezone),
+			':level' => $level,
+			':body'  => $message,
+			':file'  => Text::limit_mid_chars(Debug::path($file)),
+			':line'  => $line,
 		);
 
 		if (Log::$write_on_add)

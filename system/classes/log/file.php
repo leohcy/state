@@ -1,95 +1,65 @@
 <?php defined('SYSPATH') or die('No direct script access.');
-/**
- * File log writer. Writes out messages and stores them in a YYYY/MM directory.
- *
- * @package    Kohana
- * @category   Logging
- * @author     Kohana Team
- * @copyright  (c) 2008-2011 Kohana Team
- * @license    http://kohanaframework.org/license
- */
+
 class Log_File extends Log_Writer {
 
-	/**
-	 * @var  string  Directory to place log files in
-	 */
-	protected $_directory;
+    protected $_filename;
+    protected $_pattern;
+    protected $_maxFileSize;
+    protected $_maxLogFiles;
 
-	/**
-	 * Creates a new file logger. Checks that the directory exists and
-	 * is writable.
-	 *
-	 *     $writer = new Log_File($directory);
-	 *
-	 * @param   string  log directory
-	 * @return  void
-	 */
-	public function __construct($directory)
-	{
-		if ( ! is_dir($directory) OR ! is_writable($directory))
-		{
-			throw new Kohana_Exception('Directory :dir must be writable',
-				array(':dir' => Debug::path($directory)));
-		}
+    /**
+     * Creates a new file logger. Checks that the directory exists and
+     * is writable.
+     * @param   string  log directory
+     * @param   string  log filename (default application.log)
+     * @param   string  log pattern (default [:time] :level :file::line - :body)
+     * @param   string  log maxFileSize in MB (default 10)
+     * @param   string  log maxLogFiles (default 200)
+     * @return  void
+     */
+    public function __construct($directory, $filename = 'application.log', $pattern = '[:time][:level][:file::line] :body', $maxFileSize = 10, $maxLogFiles = 200) {
+        if (!is_dir($directory) OR !is_writable($directory))
+            throw new Kohana_Exception('Directory :dir must be writable', array(':dir' => Debug::path($directory)));
+        $this->_filename = realpath($directory).DIRECTORY_SEPARATOR.$filename;
+        $this->_pattern = $pattern;
+        $this->_maxFileSize = (int)$maxFileSize;
+        if ($this->_maxFileSize < 1)
+            $this->_maxFileSize = 1;
+        $this->_maxLogFiles = (int)$maxLogFiles;
+        if ($this->_maxLogFiles < 1)
+            $this->_maxLogFiles = 1;
+    }
 
-		// Determine the directory path
-		$this->_directory = realpath($directory).DIRECTORY_SEPARATOR;
-	}
+    /**
+     * Writes each of the messages into the log file.
+     * @param   array   messages
+     * @return  void
+     */
+    public function write(array $messages) {
+        if (@filesize($this->_filename) > $this->_maxFileSize * 1024 * 1024)
+            $this->rotate();
+        $fp = @fopen($this->_filename, 'a');
+        @flock($fp, LOCK_EX);
+        foreach ($messages as $message) {
+            $message[':level'] = $this->_log_levels[$message[':level']];
+            @fwrite($fp, strtr($this->_pattern, $message).PHP_EOL);
+        }
+        @flock($fp, LOCK_UN);
+        @fclose($fp);
+    }
 
-	/**
-	 * Writes each of the messages into the log file. The log file will be
-	 * appended to the `YYYY/MM/DD.log.php` file, where YYYY is the current
-	 * year, MM is the current month, and DD is the current day.
-	 *
-	 *     $writer->write($messages);
-	 *
-	 * @param   array   messages
-	 * @return  void
-	 */
-	public function write(array $messages)
-	{
-		// Set the yearly directory name
-		$directory = $this->_directory.date('Y');
+    protected function rotate() {
+        for ($i = $this->_maxLogFiles; $i > 0; --$i) {
+            $file = $this->_filename.'.'.$i;
+            if (is_file($file)) {
+                if ($i === $this->_maxLogFiles)
+                    @unlink($file);
+                else
+                    @rename($file, $this->_filename.'.'.($i + 1));
+            }
+        }
+        if (is_file($this->_filename))
+            @rename($this->_filename, $this->_filename.'.1');
+    }
 
-		if ( ! is_dir($directory))
-		{
-			// Create the yearly directory
-			mkdir($directory, 02777);
-
-			// Set permissions (must be manually set to fix umask issues)
-			chmod($directory, 02777);
-		}
-
-		// Add the month to the directory
-		$directory .= DIRECTORY_SEPARATOR.date('m');
-
-		if ( ! is_dir($directory))
-		{
-			// Create the monthly directory
-			mkdir($directory, 02777);
-
-			// Set permissions (must be manually set to fix umask issues)
-			chmod($directory, 02777);
-		}
-
-		// Set the name of the log file
-		$filename = $directory.DIRECTORY_SEPARATOR.date('d').'.php';
-
-		if ( ! file_exists($filename))
-		{
-			// Create the log file
-			file_put_contents($filename, Kohana::FILE_SECURITY.' ?>'.PHP_EOL);
-
-			// Allow anyone to write to log files
-			chmod($filename, 0666);
-		}
-
-		foreach ($messages as $message)
-		{
-			// Write each message into the log file
-			// Format: time --- level: body
-			file_put_contents($filename, PHP_EOL.$message['time'].' --- '.$this->_log_levels[$message['level']].': '.$message['body'], FILE_APPEND);
-		}
-	}
-
-} // End Kohana_Log_File
+}

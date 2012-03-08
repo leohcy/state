@@ -187,6 +187,33 @@ class Kohana {
         return $value;
     }
 
+    /**
+     * Adds a message to the log with DEBUG level.
+     * @param   string  message body
+     * @param   array   values to replace in the message
+     */
+    public static function debug($message, array $values = NULL) {
+        Kohana::$log->add(Log::DEBUG, $message, $values);
+    }
+
+    /**
+     * Adds a message to the log with INFO level.
+     * @param   string  message body
+     * @param   array   values to replace in the message
+     */
+    public static function info($message, array $values = NULL) {
+        Kohana::$log->add(Log::INFO, $message, $values);
+    }
+
+    /**
+     * Adds a message to the log with NOTICE level.
+     * @param   string  message body
+     * @param   array   values to replace in the message
+     */
+    public static function notice($message, array $values = NULL) {
+        Kohana::$log->add(Log::NOTICE, $message, $values);
+    }
+
 }
 
 if (!function_exists('__')) {
