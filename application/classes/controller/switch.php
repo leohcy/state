@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Controller_Switch extends Controller {
+class Controller_Switch extends Controller_Common {
 
     public function action_value() {
         $this->model('controller', $this->request->controller());

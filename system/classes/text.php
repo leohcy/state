@@ -603,7 +603,7 @@ class Text {
 		return $str;
 	}
     
-    public static function limit_mid_chars($str, $left = 10, $right = 24)
+    public static function limit_mid_chars($str, $left = 10, $right = 16)
     {
         if (trim($str) === '' OR ($length = strlen($str)) <= ($left + $right + 2))
             return $str;

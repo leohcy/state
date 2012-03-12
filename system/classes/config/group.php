@@ -38,7 +38,7 @@ class Config_Group extends ArrayObject {
 	 * @param string         $group    The group name
 	 * @param array          $config   Group's config
 	 */
-	public function __construct(Kohana_Config $instance, $group, array $config = array())
+	public function __construct(Config $instance, $group, array $config = array())
 	{
 		$this->_parent_instance = $instance;
 		$this->_group_name      = $group;

@@ -100,25 +100,24 @@ class Request_Client_Internal extends Request_Client {
 			// Create a new instance of the controller
 			$controller = $class->newInstance($request, $request->response() ? $request->response() : $request->create_response());
 
-			$class->getMethod('before')->invoke($controller);
-
-			// Determine the action to use
-			$action = $request->action();
-
-			$params = $request->param();
-
-			// If the action doesn't exist, it's a 404
-			if ( ! $class->hasMethod('action_'.$action))
-			{
-				throw new HTTP_Exception_404('The requested URL :uri was not found on this server.',
-													array(':uri' => $request->uri()));
-			}
-
-			$method = $class->getMethod('action_'.$action);
-			$method->invoke($controller);
-
-			// Execute the "after action" method
-			$class->getMethod('after')->invoke($controller);
+			if ($class->getMethod('before')->invoke($controller) !== FALSE)
+            {
+    			// Determine the action to use
+    			$action = $request->action();
+    
+    			// If the action doesn't exist, it's a 404
+    			if ( ! $class->hasMethod('action_'.$action))
+    			{
+    				throw new HTTP_Exception_404('The requested URL :uri was not found on this server.',
+    													array(':uri' => $request->uri()));
+    			}
+    
+    			if ($class->getMethod('action_'.$action)->invoke($controller) !== FALSE)
+                {
+        			// Execute the "after action" method
+        			$class->getMethod('after')->invoke($controller);
+                }
+            }
 		}
 		catch (Exception $e)
 		{
