@@ -8,10 +8,16 @@ class Controller_Update extends Controller_Common {
     public function before() {
         if(parent::before() === FALSE)
             return FALSE;
-        $value = $this->request->param('value');
-        if(!Valid::not_empty($value))
-            return $this->handler("invalid parameters. value:[$value]");
+        // 读取路径配置项
+        $prop = Kohana::$config->load('property.'.$this->path);
+        if(!isset($prop['type']))
+            return $this->handler("invalid path. path:[$this->path]");
+        // 数据
+        $value = $this->convert('value', $prop['type']);
+        if($value === FALSE)
+            return FALSE;
         $this->value = $value;
+        // 时间戳
         $time = $this->request->param('time');
         if(!Valid::not_empty($time))
             $time = time();
@@ -28,7 +34,7 @@ class Controller_Update extends Controller_Common {
                     '_id' => $this->id,
                     '$or' => array(
                         array($this->path.'.time' => array('$exists' => FALSE)),
-                        array($this->path.'.time' => array('$lt' => $this->time))
+                        array($this->path.'.time' => array('$lte' => $this->time))
                     )
                 ),
                 'update' => array('$set' => array(

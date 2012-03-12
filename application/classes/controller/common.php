@@ -53,6 +53,49 @@ class Controller_Common extends Controller {
         State_Exception::handler(isset($exception) ? $exception : new State_Exception($message));
     }
 
+    /**
+     * 根据指定类型，提取用户传入参数，转换为对应类型
+     * @param   $param    参数名
+     * @param   $type    类型信息
+     * @return  FALSE   处理完毕
+     */
+    protected function convert($param, $type) {
+        if(is_array($type)) {// 嵌入式对象
+            $value = array();
+            foreach($type as $p => $t) {
+                $v = $this->convert($param.'.'.$p, $t);
+                if($v === FALSE)
+                    return FALSE;
+                Arr::set_path($value, $p, $v);
+            }
+            return $value;
+        } else {// 单值对象
+            $value = $this->request->param(strtr($param, '.', '_'));
+            if(!Valid::not_empty($value))
+                return $this->handler("invalid parameters. $param:[$value]");
+            switch($type) {// 数据类型检查及转换
+                case 'int':
+                    if(!Valid::digit($value))
+                        return $this->handler("invalid parameters. $param:[$value]");
+                    return (int)$value;
+                case 'float':
+                    if(!Valid::numeric($value))
+                        return $this->handler("invalid parameters. $param:[$value]");
+                    return (float)$value;
+                case 'bool':
+                    if(Valid::regex($value, '/^(true|1|yes|on)$/iD'))
+                        return 1;
+                    elseif(Valid::regex($value, '/^(false|0|no|off)$/iD'))
+                        return 0;
+                    else
+                        return $this->handler("invalid parameters. $param:[$value]");
+                case 'string':
+                default:
+                    return (string)$value;
+            }
+        }
+    }
+
     protected $source;
     protected $domain;
     protected $id;
@@ -66,11 +109,11 @@ class Controller_Common extends Controller {
         ));
         // 请求日志
         Kohana::info('[:source] request', array(':source' => $this->source));
+        // 领域对象
         $this->domain = $this->request->param('domain');
-        $id = $this->request->param('id');
-        if(!Valid::not_empty($id) || !Valid::digit($id))
-            return $this->handler("invalid parameters. id:[$id]");
-        $this->id = (int)$id;
+        // ID
+        $this->id = $this->convert('id', 'int');
+        // 路径
         $path = $this->request->param('path');
         if(!Valid::not_empty($path) || !Valid::regex($path, '/^[a-z0-9.]++$/iD'))
             return $this->handler("invalid parameters. path:[$path]");
