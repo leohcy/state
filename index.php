@@ -16,9 +16,9 @@ define('KOHANA_START_MEMORY', memory_get_usage());
 $application = 'application';
 $system = 'system';
 define('DOCROOT', realpath(dirname(__FILE__)).DIRECTORY_SEPARATOR);
-if (!is_dir($application) AND is_dir(DOCROOT.$application))
+if(!is_dir($application) AND is_dir(DOCROOT.$application))
     $application = DOCROOT.$application;
-if (!is_dir($system) AND is_dir(DOCROOT.$system))
+if(!is_dir($system) AND is_dir(DOCROOT.$system))
     $system = DOCROOT.$system;
 define('APPPATH', realpath($application).DIRECTORY_SEPARATOR);
 define('SYSPATH', realpath($system).DIRECTORY_SEPARATOR);

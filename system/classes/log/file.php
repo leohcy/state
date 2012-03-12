@@ -18,15 +18,15 @@ class Log_File extends Log_Writer {
      * @return  void
      */
     public function __construct($directory, $filename = 'application.log', $pattern = '[:time][:level][:file::line] :body', $maxFileSize = 10, $maxLogFiles = 200) {
-        if (!is_dir($directory) OR !is_writable($directory))
+        if(!is_dir($directory) OR !is_writable($directory))
             throw new Kohana_Exception('Directory :dir must be writable', array(':dir' => Debug::path($directory)));
         $this->_filename = realpath($directory).DIRECTORY_SEPARATOR.$filename;
         $this->_pattern = $pattern;
         $this->_maxFileSize = (int)$maxFileSize;
-        if ($this->_maxFileSize < 1)
+        if($this->_maxFileSize < 1)
             $this->_maxFileSize = 1;
         $this->_maxLogFiles = (int)$maxLogFiles;
-        if ($this->_maxLogFiles < 1)
+        if($this->_maxLogFiles < 1)
             $this->_maxLogFiles = 1;
     }
 
@@ -36,11 +36,11 @@ class Log_File extends Log_Writer {
      * @return  void
      */
     public function write(array $messages) {
-        if (@filesize($this->_filename) > $this->_maxFileSize * 1024 * 1024)
+        if(@filesize($this->_filename) > $this->_maxFileSize * 1024 * 1024)
             $this->rotate();
         $fp = @fopen($this->_filename, 'a');
         @flock($fp, LOCK_EX);
-        foreach ($messages as $message) {
+        foreach($messages as $message) {
             $message[':level'] = $this->_log_levels[$message[':level']];
             @fwrite($fp, strtr($this->_pattern, $message).PHP_EOL);
         }
@@ -49,16 +49,16 @@ class Log_File extends Log_Writer {
     }
 
     protected function rotate() {
-        for ($i = $this->_maxLogFiles; $i > 0; --$i) {
+        for($i = $this->_maxLogFiles; $i > 0; --$i) {
             $file = $this->_filename.'.'.$i;
-            if (is_file($file)) {
-                if ($i === $this->_maxLogFiles)
+            if(is_file($file)) {
+                if($i === $this->_maxLogFiles)
                     @unlink($file);
                 else
                     @rename($file, $this->_filename.'.'.($i + 1));
             }
         }
-        if (is_file($this->_filename))
+        if(is_file($this->_filename))
             @rename($this->_filename, $this->_filename.'.1');
     }
 

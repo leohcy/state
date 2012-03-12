@@ -151,7 +151,8 @@ class Request implements HTTP_Request {
 			// Store global GET and POST data in the initial request only
 			$request->protocol($protocol)
 				->query($_GET)
-				->post($_POST);
+				->post($_POST)
+                ->wrap();
 
 			if (isset($secure))
 			{
@@ -1488,5 +1489,10 @@ class Request implements HTTP_Request {
 
 		return $this;
 	}
+    
+    public function wrap()
+    {
+        $this->_params = Arr::merge($this->_params, $this->_get, $this->_post);
+    }
 
 } // End Request

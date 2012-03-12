@@ -2,7 +2,6 @@
 
 class Kohana {
 
-    const FILE_SECURITY = '<?php defined(\'SYSPATH\') or die(\'No direct script access.\');';
     public static $log;
     public static $config;
     public static $base_url = '/';
@@ -13,9 +12,16 @@ class Kohana {
     public static $charset = 'utf-8';
     public static $safe_mode = FALSE;
     public static $magic_quotes = FALSE;
-    public static $shutdown_errors = array(E_PARSE, E_ERROR, E_USER_ERROR);
+    public static $shutdown_errors = array(
+        E_PARSE,
+        E_ERROR,
+        E_USER_ERROR
+    );
     protected static $_init = FALSE;
-    protected static $_paths = array(APPPATH, SYSPATH);
+    protected static $_paths = array(
+        APPPATH,
+        SYSPATH
+    );
 
     /**
      * Initializes the environment:
@@ -36,25 +42,37 @@ class Kohana {
      * @return  void
      */
     public static function init(array $settings = NULL) {
-        if (Kohana::$_init)
+        if(Kohana::$_init)
             return;
         Kohana::$_init = TRUE;
         ob_start();
-        if (isset($settings['base_url']))
+        if(isset($settings['base_url']))
             Kohana::$base_url = rtrim($settings['base_url'], '/').'/';
-        if (isset($settings['index_file']))
+        if(isset($settings['index_file']))
             Kohana::$index_file = trim($settings['index_file'], '/');
-        if (isset($settings['profile']))
+        if(isset($settings['profile']))
             Kohana::$profiling = (bool)$settings['profile'];
-        if (isset($settings['errors']))
+        if(isset($settings['errors']))
             Kohana::$errors = (bool)$settings['errors'];
-        spl_autoload_register(array('Kohana', 'auto_load'));
-        register_shutdown_function(array('Kohana', 'shutdown_handler'));
-        if (Kohana::$errors === TRUE) {
-            set_exception_handler(array('Kohana_Exception', 'handler'));
-            set_error_handler(array('Kohana', 'error_handler'));
+        spl_autoload_register(array(
+            'Kohana',
+            'auto_load'
+        ));
+        if(Kohana::$errors === TRUE) {
+            set_exception_handler(array(
+                'Kohana_Exception',
+                'handler'
+            ));
+            set_error_handler(array(
+                'Kohana',
+                'error_handler'
+            ));
         }
-        if (function_exists('mb_internal_encoding'))
+        register_shutdown_function(array(
+            'Kohana',
+            'shutdown_handler'
+        ));
+        if(function_exists('mb_internal_encoding'))
             mb_internal_encoding(Kohana::$charset);
         Kohana::$safe_mode = (bool) ini_get('safe_mode');
         Kohana::$magic_quotes = (bool) get_magic_quotes_gpc();
@@ -79,7 +97,7 @@ class Kohana {
     public static function auto_load($class) {
         try {
             $file = str_replace('_', '/', strtolower($class));
-            if ($path = Kohana::find_file('classes', $file)) {
+            if($path = Kohana::find_file('classes', $file)) {
                 require $path;
                 return TRUE;
             }
@@ -109,23 +127,23 @@ class Kohana {
     public static function find_file($dir, $file, $ext = NULL, $array = FALSE) {
         $ext = ($ext === NULL) ? '.php' : ($ext ? ".{$ext}" : '');
         $path = $dir.DIRECTORY_SEPARATOR.$file.$ext;
-        if (Kohana::$profiling === TRUE AND class_exists('Profiler', FALSE))
+        if(Kohana::$profiling === TRUE AND class_exists('Profiler', FALSE))
             $benchmark = Profiler::start('Kohana', __FUNCTION__);
-        if ($array) {
+        if($array) {
             $found = array();
-            foreach (array_reverse(Kohana::$_paths) as $dir)
-                if (is_file($dir.$path))
+            foreach(array_reverse(Kohana::$_paths) as $dir)
+                if(is_file($dir.$path))
                     $found[] = $dir.$path;
         } else {
             $found = FALSE;
-            foreach (Kohana::$_paths as $dir) {
-                if (is_file($dir.$path)) {
+            foreach(Kohana::$_paths as $dir) {
+                if(is_file($dir.$path)) {
                     $found = $dir.$path;
                     break;
                 }
             }
         }
-        if (isset($benchmark))
+        if(isset($benchmark))
             Profiler::stop($benchmark);
         return $found;
     }
@@ -147,7 +165,7 @@ class Kohana {
      * @return  TRUE
      */
     public static function error_handler($code, $error, $file = NULL, $line = NULL) {
-        if (error_reporting() & $code)
+        if(error_reporting() & $code)
             throw new ErrorException($error, $code, 0, $file, $line);
         return TRUE;
     }
@@ -158,9 +176,9 @@ class Kohana {
      * @return  void
      */
     public static function shutdown_handler() {
-        if (!Kohana::$_init)
+        if(!Kohana::$_init)
             return;
-        if (Kohana::$errors AND $error = error_get_last() AND in_array($error['type'], Kohana::$shutdown_errors)) {
+        if(Kohana::$errors AND $error = error_get_last() AND in_array($error['type'], Kohana::$shutdown_errors)) {
             ob_get_level() and ob_clean();
             Kohana_Exception::handler(new ErrorException($error['message'], $error['type'], 0, $error['file'], $error['line']));
             exit(1);
@@ -175,14 +193,17 @@ class Kohana {
      * @return  mixed  sanitized variable
      */
     public static function sanitize($value) {
-        if (is_array($value) OR is_object($value)) {
-            foreach ($value as $key => $val)
+        if(is_array($value) OR is_object($value)) {
+            foreach($value as $key => $val)
                 $value[$key] = Kohana::sanitize($val);
-        } elseif (is_string($value)) {
-            if (Kohana::$magic_quotes === TRUE)
+        } elseif(is_string($value)) {
+            if(Kohana::$magic_quotes === TRUE)
                 $value = stripslashes($value);
-            if (strpos($value, "\r") !== FALSE)
-                $value = str_replace(array("\r\n", "\r"), "\n", $value);
+            if(strpos($value, "\r") !== FALSE)
+                $value = str_replace(array(
+                    "\r\n",
+                    "\r"
+                ), "\n", $value);
         }
         return $value;
     }
@@ -212,7 +233,7 @@ class Kohana {
      * @param   Exception   exception to be handled
      */
     public static function notice($message, array $values = NULL, Exception $e = NULL) {
-        if (isset($e))
+        if(isset($e))
             $message .= PHP_EOL.Kohana_Exception::text($e);
         Kohana::$log->add(Log::NOTICE, $message, $values);
     }
@@ -224,14 +245,14 @@ class Kohana {
      * @param   Exception   exception to be handled
      */
     public static function warning($message, array $values = NULL, Exception $e = NULL) {
-        if (isset($e))
+        if(isset($e))
             $message .= PHP_EOL.Kohana_Exception::text($e);
         Kohana::$log->add(Log::WARNING, $message, $values);
     }
 
 }
 
-if (!function_exists('__')) {
+if(!function_exists('__')) {
     /**
      * Kohana translation function. The PHP function
      * [strtr](http://php.net/strtr) is used for replacing parameters.
