@@ -3,7 +3,6 @@
 class Controller_Common extends Controller {
 
     private $_model = array();
-
     /**
      * 获取或查看model值
      * @param   $key    model的key或完整model的数组
@@ -30,76 +29,28 @@ class Controller_Common extends Controller {
      * @return  FALSE   处理完毕
      */
     protected function handler($message, $exception = NULL, $warning = FALSE) {
-        $level = $warning ? 'warning' : 'notice';
         // 错误日志
-        Kohana::$level('[:source] :message', array(
-            ':source' => $this->source,
-            ':message' => $message
-        ), $exception);
+        $level = $warning ? 'warning' : 'notice';
+        Kohana::$level("[{$this->source}] {$message}", NULL, $exception);
         $datatype = $this->request->param('datatype', 'json');
         if($datatype == 'json') {
-            $this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
+            //$this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
             $this->response->body(json_encode(array(
                 'success' => FALSE,
                 'message' => $message
             )));
             // 响应日志
-            Kohana::info('[:source] response: :body', array(
-                ':source' => $this->source,
-                ':body' => $this->response->body()
-            ));
+            Kohana::info("[{$this->source}] response: {$this->response->body()}");
             return FALSE;
         }
         State_Exception::handler(isset($exception) ? $exception : new State_Exception($message));
-    }
-
-    /**
-     * 根据指定类型，提取用户传入参数，转换为对应类型
-     * @param   $param    参数名
-     * @param   $type    类型信息
-     * @return  FALSE   处理完毕
-     */
-    protected function convert($param, $type) {
-        if(is_array($type)) {// 嵌入式对象
-            $value = array();
-            foreach($type as $p => $t) {
-                $v = $this->convert($param.'.'.$p, $t);
-                if($v === FALSE)
-                    return FALSE;
-                Arr::set_path($value, $p, $v);
-            }
-            return $value;
-        } else {// 单值对象
-            $value = $this->request->param(strtr($param, '.', '_'));
-            if(!Valid::not_empty($value))
-                return $this->handler("invalid parameters. $param:[$value]");
-            switch($type) {// 数据类型检查及转换
-                case 'int':
-                    if(!Valid::digit($value))
-                        return $this->handler("invalid parameters. $param:[$value]");
-                    return (int)$value;
-                case 'float':
-                    if(!Valid::numeric($value))
-                        return $this->handler("invalid parameters. $param:[$value]");
-                    return (float)$value;
-                case 'bool':
-                    if(Valid::regex($value, '/^(true|1|yes|on)$/iD'))
-                        return 1;
-                    elseif(Valid::regex($value, '/^(false|0|no|off)$/iD'))
-                        return 0;
-                    else
-                        return $this->handler("invalid parameters. $param:[$value]");
-                case 'string':
-                default:
-                    return (string)$value;
-            }
-        }
     }
 
     protected $source;
     protected $domain;
     protected $id;
     protected $path;
+    protected $prop;
 
     public function before() {
         $this->source = __(':client->:uri?:params', array(
@@ -108,31 +59,94 @@ class Controller_Common extends Controller {
             ':params' => http_build_query($this->request->param())
         ));
         // 请求日志
-        Kohana::info('[:source] request', array(':source' => $this->source));
+        Kohana::info("[{$this->source}] request");
         // 领域对象
         $this->domain = $this->request->param('domain');
         // ID
         $this->id = $this->convert('id', 'int');
+        if($this->id === FALSE)
+            return FALSE;
         // 路径
-        $path = $this->request->param('path');
-        if(!Valid::not_empty($path) || !Valid::regex($path, '/^[a-z0-9.]++$/iD'))
-            return $this->handler("invalid parameters. path:[$path]");
-        $this->path = $path;
+        $this->path = $this->request->param('path');
+        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^[a-z0-9.]++$/iD'))
+            return $this->handler("invalid path:[{$this->path}] wrong format");
+        // 读取配置
+        $this->prop = Kohana::$config->load('property.'.$this->domain.'.'.$this->path);
+        if(!isset($this->prop))
+            return $this->handler("invalid path:[{$this->path}] not allowed");
     }
 
     public function after() {
         $datatype = $this->request->param('datatype', 'json');
         if($datatype == 'json') {
-            $this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
+            //$this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
             $this->response->body(json_encode($this->model()));
             // 响应日志
-            Kohana::info('[:source] response: :body', array(
-                ':source' => $this->source,
-                ':body' => $this->response->body()
-            ));
+            Kohana::info("[{$this->source}] response: {$this->response->body()}");
         } else {
             $this->response->body(Debug::vars($this->model()).View::factory('kohana/profiler'));
         }
+    }
+
+    /**
+     * 根据指定类型，提取用户传入参数，转换为对应类型
+     * @param   $param    参数名
+     * @param   $type    类型信息
+     * @return  FALSE   处理完毕        NULL    跳过
+     */
+    protected function convert($param, $prop) {
+        if(is_string($prop)) {// 单值类型
+            $value = $this->request->param(strtr($param, '.', '_'));
+            if(!Valid::not_empty($value)) {
+                if(strpos($param, '.') !== FALSE)// 跳过
+                    return NULL;
+                return $this->handler("invalid parameters. $param:[$value] required");
+            }
+            if($prop == 'int' || $prop == 'incr') {// 整型
+                if(!Valid::digit($value))
+                    return $this->handler("invalid parameters. $param:[$value] need int");
+                return (int)$value;
+            } elseif($prop == 'float') {// 浮点
+                if(!Valid::numeric($value))
+                    return $this->handler("invalid parameters. $param:[$value] need float");
+                return (float)$value;
+            } elseif($prop == 'bool') {// 布尔
+                if(Valid::regex($value, '/^(true|1|yes|on)$/iD'))
+                    return 1;
+                elseif(Valid::regex($value, '/^(false|0|no|off)$/iD'))
+                    return 0;
+                else
+                    return $this->handler("invalid parameters. $param:[$value] need bool");
+            } elseif($prop == 'string') {// 字符串
+                return (string)$value;
+            } elseif(Text::start_with($prop, 'ref:')) {// DBRef
+                if(!Valid::digit($value))
+                    return $this->handler("invalid parameters. $param:[$value] need int");
+                return MongoDBRef::create(substr($prop, 4), (int)$value);
+            } else {// 其他
+                return $this->handler("invalid request. $param:[$value] not allowed");
+            }
+        }
+        // 数组类型
+        $array = array();
+        foreach($prop as $param1 => $prop1) {
+            if($param1 == '$array') {
+                if($prop1 == 'embed')
+                    continue;
+                return $this->convert($param, $prop1);
+            }
+            $value = $this->convert($param.'.'.$param1, $prop1);
+            if($value === FALSE)// 错误
+                return FALSE;
+            if($value === NULL || (is_array($value) && empty($value)))// 可选 跳过
+                continue;
+            if(is_array($prop1) && isset($prop1['$array']))// 包装数组
+                $value = array($value);
+            $array[$param1] = $value;
+        }
+        if(strpos($param, '.') === FALSE && !$array)// 至少有一个参数
+            return $this->handler('invalid parameters. need at least one param');
+        return $array;
     }
 
 }

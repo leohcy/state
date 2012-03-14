@@ -11,7 +11,7 @@ Kohana::$config->attach(new Config_File);
 Route::set('default', '(<domain>(/<controller>(/<action>)))', array(
     'domain' => 'user',
     'controller' => 'update|switch|query|remove',
-    'action' => 'value|array'
+    'action' => 'value|array|incr'
 ))->defaults(array(
     'domain' => 'user',
     'controller' => 'update',

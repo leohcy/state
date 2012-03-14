@@ -609,5 +609,10 @@ class Text {
             return $str;
         return substr($str, 0, $left).'……'.substr($str, $length - $right, $right);
     }
+    
+    public static function start_with($str, $with)
+    {
+        return substr($str, 0, strlen($with)) === $with;
+    }
 
 } // End text
