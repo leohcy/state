@@ -52,15 +52,11 @@ class Controller_Update extends Controller_Common {
             $deleted = array();
             $this->diffDBRef($old, $new, $deleted);
             foreach($deleted as $info) {
-                try {
-                    // 更新该DBRef的反向引用
-                    $path = 'by.'.$this->domain.'_'.strtr($info[0], '.', '_');
-                    $ref = MongoDBRef::create($this->domain, $this->id);
-                    $object = array('$pull' => array($path => $ref));
-                    $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $object);
-                } catch(Exception $e) {
-                    Kohana::warning("[{$this->source}] cannot connect to mongodb", NULL, $e);
-                }
+                // 更新该DBRef的反向引用
+                $path = 'by.'.$this->domain.'_'.strtr($info[0], '.', '_');
+                $ref = MongoDBRef::create($this->domain, $this->id);
+                $object = array('$pull' => array($path => $ref));
+                $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $object);
                 if($result['ok'] == 1) {
                     // 新增对象
                     if(!$result['updatedExisting'])
@@ -74,15 +70,11 @@ class Controller_Update extends Controller_Common {
             $added = array();
             $this->diffDBRef($this->value, $old, $added);
             foreach($added as $info) {
-                try {
-                    // 更新该DBRef的反向引用
-                    $path = 'by.'.$this->domain.'_'.strtr($info[0], '.', '_');
-                    $ref = MongoDBRef::create($this->domain, $this->id);
-                    $object = array('$addToSet' => array($path => $ref));
-                    $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $object);
-                } catch(Exception $e) {
-                    Kohana::warning("[{$this->source}] cannot connect to mongodb", NULL, $e);
-                }
+                // 更新该DBRef的反向引用
+                $path = 'by.'.$this->domain.'_'.strtr($info[0], '.', '_');
+                $ref = MongoDBRef::create($this->domain, $this->id);
+                $object = array('$addToSet' => array($path => $ref));
+                $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $object);
                 if($result['ok'] == 1) {
                     // 新增对象
                     if(!$result['updatedExisting'])

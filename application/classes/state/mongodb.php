@@ -2,35 +2,41 @@
 
 class State_MongoDB {
 
+    private static $_primary = NULL;
     /**
      * 返回MongoDB主节点，允许读写操作
      * @param   $domain    领域对象
      * @return  DB或Collection
      */
     public static function primary($domain = NULL) {
-        $server = Kohana::$config->load('mongodb.server');
-        $mongo = new Mongo($server);
-        $db = Kohana::$config->load('mongodb.db');
-        $mongodb = $mongo->selectDB($db);
+        if(!isset(State_MongoDB::$_primary)) {
+            $server = Kohana::$config->load('mongodb.server');
+            $mongo = new Mongo($server);
+            $db = Kohana::$config->load('mongodb.db');
+            State_MongoDB::$_primary = $mongo->selectDB($db);
+        }
         if(!isset($domain))
-            return $mongodb;
-        return $mongodb->selectCollection($domain);
+            return State_MongoDB::$_primary;
+        return State_MongoDB::$_primary->selectCollection($domain);
     }
 
+    private static $_secondary = NULL;
     /**
      * 返回MongoDB从节点，允许只读操作
      * @param   $domain    领域对象
      * @return  DB或Collection
      */
     public static function secondary($domain = NULL) {
-        $server = Kohana::$config->load('mongodb.server');
-        $mongo = new Mongo($server);
-        $mongo->setSlaveOkay();
-        $db = Kohana::$config->load('mongodb.db');
-        $mongodb = $mongo->selectDB($db);
+        if(!isset(State_MongoDB::$_secondary)) {
+            $server = Kohana::$config->load('mongodb.server');
+            $mongo = new Mongo($server);
+            $mongo->setSlaveOkay();
+            $db = Kohana::$config->load('mongodb.db');
+            State_MongoDB::$_secondary = $mongo->selectDB($db);
+        }
         if(!isset($domain))
-            return $mongodb;
-        return $mongodb->selectCollection($domain);
+            return State_MongoDB::$_secondary;
+        return State_MongoDB::$_secondary->selectCollection($domain);
     }
 
     /**
@@ -43,8 +49,10 @@ class State_MongoDB {
      * @return  返回值
      */
     public static function findAndModify($domain, $id, $path, $time, &$value) {
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('MongoDB', 'findAndModify');
         $timepath = 'time.'.strtr($path, '.', '_');
-        return State_MongoDB::primary()->command(array(
+        $result = State_MongoDB::primary()->command(array(
             'findAndModify' => $domain,
             'query' => array(
                 '_id' => $id,
@@ -60,6 +68,9 @@ class State_MongoDB {
             'fields' => array($path => 1),
             'upsert' => TRUE
         ));
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
+        return $result;
     }
 
     /**
@@ -70,10 +81,15 @@ class State_MongoDB {
      * @return  返回值
      */
     public static function update($domain, $id, array &$object) {
-        return State_MongoDB::primary($domain)->update(array('_id' => $id), $object, array(
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('MongoDB', 'update');
+        $result = State_MongoDB::primary($domain)->update(array('_id' => $id), $object, array(
             'upsert' => TRUE,
             'safe' => TRUE
         ));
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
+        return $result;
     }
 
 }

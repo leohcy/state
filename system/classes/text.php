@@ -607,7 +607,7 @@ class Text {
     {
         if (trim($str) === '' OR ($length = strlen($str)) <= ($left + $right + 2))
             return $str;
-        return substr($str, 0, $left).'……'.substr($str, $length - $right, $right);
+        return substr($str, 0, $left).'..'.substr($str, $length - $right, $right);
     }
     
     public static function start_with($str, $with)
