@@ -49,6 +49,10 @@ class Log_File extends Log_Writer {
     }
 
     protected function rotate() {
+        $lock = $this->_filename.'.lock';
+        if(is_file($lock))
+            return;
+        @touch($lock);
         for($i = $this->_maxLogFiles; $i > 0; --$i) {
             $file = $this->_filename.'.'.$i;
             if(is_file($file)) {
@@ -60,6 +64,7 @@ class Log_File extends Log_Writer {
         }
         if(is_file($this->_filename))
             @rename($this->_filename, $this->_filename.'.1');
+        @unlink($lock);
     }
 
 }

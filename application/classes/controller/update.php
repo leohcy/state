@@ -62,7 +62,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        // TODO
+        State_Notice::notice($this->domain, $this->id, $this->path, $this->value, $this->time, State_Notice::UPDATE);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($old)) {
             $deleted = array();
@@ -74,7 +74,7 @@ class Controller_Update extends Controller_Common {
                 $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $update);
                 if($result['ok'] == 1) {
                     // 通知
-                    // TODO
+                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PULL);
                 }
             }
         }
@@ -91,7 +91,7 @@ class Controller_Update extends Controller_Common {
                     if(!$result['updatedExisting'])
                         Kohana::notice("[{$this->source}] new domain object detected: {$info[1]['$ref']}#{$info[1]['$id']}");
                     // 通知
-                    // TODO
+                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PUSH);
                 }
             }
         }
@@ -123,7 +123,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        // TODO
+        State_Notice::notice($this->domain, $this->id, $this->path, $this->value, $this->time, State_Notice::PUSH);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($this->value)) {
             $added = array();
@@ -138,7 +138,7 @@ class Controller_Update extends Controller_Common {
                     if(!$result['updatedExisting'])
                         Kohana::notice("[{$this->source}] new domain object detected: {$info[1]['$ref']}#{$info[1]['$id']}");
                     // 通知
-                    // TODO
+                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PUSH);
                 }
             }
         }
@@ -151,8 +151,9 @@ class Controller_Update extends Controller_Common {
         // 插入数据库
         try {
             $update = array('$inc' => array($this->path => $this->value));
-            $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update);
+            $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update, TRUE);
             $this->model('success', $result['ok'] == 1);
+            $this->model('newValue', Arr::path($result, 'value.'.$this->path));
             $this->model('existed', (bool)Arr::path($result, 'lastErrorObject.updatedExisting'));
         } catch (Exception $e) {
             return $this->handler('cannot connect to mongodb', $e, TRUE);
@@ -165,7 +166,7 @@ class Controller_Update extends Controller_Common {
         // 定时
         // TODO
         // 通知
-        // TODO
+        State_Notice::notice($this->domain, $this->id, $this->path, $this->model('newValue'), $this->time, State_Notice::UPDATE);
     }
 
     private function diffDBRef(array $array, $another, array &$list, array $path = array(), array $level = array()) {

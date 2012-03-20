@@ -46,9 +46,10 @@ class State_MongoDB {
      * @param   $path    路径
      * @param   $time    时间戳
      * @param   $update    更新操作
+     * @param   $new    是否返回新值
      * @return  返回值
      */
-    public static function findAndModify($domain, $id, $path, $time, array $update) {
+    public static function findAndModify($domain, $id, $path, $time, array $update, $new = FALSE) {
         if(Kohana::$profiling)
             $benchmark = Profiler::start('MongoDB', 'findAndModify');
         $timepath = 'time.'.strtr($path, '.', '_');
@@ -63,7 +64,8 @@ class State_MongoDB {
             ),
             'update' => Arr::merge($update, array('$set' => array($timepath => $time))),
             'fields' => array($path => 1),
-            'upsert' => TRUE
+            'upsert' => TRUE,
+            'new' => $new
         ));
         if(isset($benchmark))
             Profiler::stop($benchmark);
