@@ -10,7 +10,7 @@ Kohana::$log->attach(new Log_File(APPPATH.'logs'), Log::INFO);
 Kohana::$config->attach(new Config_File);
 Route::set('default', '(<domain>(/<controller>(/<action>)))', array(
     'domain' => 'user',
-    'controller' => 'update|switch|query|remove',
+    'controller' => 'update|query|remove',
     'action' => 'value|array|incr'
 ))->defaults(array(
     'domain' => 'user',

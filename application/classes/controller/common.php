@@ -1,6 +1,6 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-class Controller_Common extends Controller {
+abstract class Controller_Common extends Controller {
 
     private $_model = array();
     /**
@@ -48,9 +48,6 @@ class Controller_Common extends Controller {
 
     protected $source;
     protected $domain;
-    protected $id;
-    protected $path;
-    protected $prop;
 
     public function before() {
         $this->source = __(':client->:uri?:params', array(
@@ -62,18 +59,6 @@ class Controller_Common extends Controller {
         Kohana::info("[{$this->source}] request");
         // 领域对象
         $this->domain = $this->request->param('domain');
-        // ID
-        $this->id = $this->convert('id', 'int');
-        if($this->id === FALSE)
-            return FALSE;
-        // 路径
-        $this->path = $this->request->param('path');
-        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^[a-z0-9.]++$/iD'))
-            return $this->handler("invalid path:[{$this->path}] wrong format");
-        // 读取配置
-        $this->prop = Kohana::$config->load('property.'.$this->domain.'.'.$this->path);
-        if(!isset($this->prop))
-            return $this->handler("invalid path:[{$this->path}] not allowed");
     }
 
     public function after() {

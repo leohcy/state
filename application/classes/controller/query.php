@@ -2,16 +2,14 @@
 
 class Controller_Query extends Controller_Common {
 
-    public function action_value() {
-        $this->model('controller', $this->request->controller());
-        $this->model('action', $this->request->action());
-        $this->model('params', $this->request->param());
+    public function before() {
+        if(parent::before() === FALSE)
+            return FALSE;
+
     }
 
-    public function action_array() {
-        $this->model('controller', $this->request->controller());
-        $this->model('action', $this->request->action());
-        $this->model('params', $this->request->param());
+    public function action_value() {
+        //
     }
 
 }

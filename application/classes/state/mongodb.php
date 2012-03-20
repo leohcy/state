@@ -45,10 +45,10 @@ class State_MongoDB {
      * @param   $id    ID
      * @param   $path    路径
      * @param   $time    时间戳
-     * @param   $value    数值
+     * @param   $update    更新操作
      * @return  返回值
      */
-    public static function findAndModify($domain, $id, $path, $time, &$value) {
+    public static function findAndModify($domain, $id, $path, $time, array $update) {
         if(Kohana::$profiling)
             $benchmark = Profiler::start('MongoDB', 'findAndModify');
         $timepath = 'time.'.strtr($path, '.', '_');
@@ -61,10 +61,7 @@ class State_MongoDB {
                     array($timepath => array('$lte' => $time))
                 )
             ),
-            'update' => array('$set' => array(
-                    $path => $value,
-                    $timepath => $time
-                )),
+            'update' => Arr::merge($update, array('$set' => array($timepath => $time))),
             'fields' => array($path => 1),
             'upsert' => TRUE
         ));
@@ -77,13 +74,13 @@ class State_MongoDB {
      * 原子修改，不关心时间戳，不关心原值
      * @param   $domain    领域对象
      * @param   $id    ID
-     * @param   $object    修改操作
+     * @param   $update    更新操作
      * @return  返回值
      */
-    public static function update($domain, $id, array &$object) {
+    public static function update($domain, $id, array $update) {
         if(Kohana::$profiling)
             $benchmark = Profiler::start('MongoDB', 'update');
-        $result = State_MongoDB::primary($domain)->update(array('_id' => $id), $object, array(
+        $result = State_MongoDB::primary($domain)->update(array('_id' => $id), $update, array(
             'upsert' => TRUE,
             'safe' => TRUE
         ));

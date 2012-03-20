@@ -25,7 +25,17 @@ return array(
             ),
             'lvl2a' => ''
         ),
-        'lvl1a' => ''
+        'lvl1a' => '',
+        'profile' => array('olstat' => array(
+                'online' => array(
+                    'online' => 'bool',
+                    'busy' => 'bool',
+                    'leave' => 'bool',
+                    'sleep' => 'bool',
+                    'meeting' => 'bool',
+                ),
+                'offline' => array('offline' => 'bool')
+            ))
     ),
     'video' => ''
 );
