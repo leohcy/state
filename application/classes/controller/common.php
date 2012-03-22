@@ -90,6 +90,8 @@ abstract class Controller_Common extends Controller {
             if($prop == 'int' || $prop == 'incr') {// 整型
                 if(!Valid::digit($value))
                     return $this->handler("invalid parameters. $param:[$value] need int");
+                if($prop == 'incr' && $value <= 0)
+                    return $this->handler("invalid parameters. $param:[$value] need positive int");
                 return (int)$value;
             } elseif($prop == 'float') {// 浮点
                 if(!Valid::numeric($value))
@@ -98,10 +100,9 @@ abstract class Controller_Common extends Controller {
             } elseif($prop == 'bool') {// 布尔
                 if(Valid::regex($value, '/^(true|1|yes|on)$/iD'))
                     return 1;
-                elseif(Valid::regex($value, '/^(false|0|no|off)$/iD'))
+                if(Valid::regex($value, '/^(false|0|no|off)$/iD'))
                     return 0;
-                else
-                    return $this->handler("invalid parameters. $param:[$value] need bool");
+                return $this->handler("invalid parameters. $param:[$value] need bool");
             } elseif($prop == 'string') {// 字符串
                 return (string)$value;
             } elseif(Text::start_with($prop, 'ref:')) {// DBRef

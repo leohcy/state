@@ -26,7 +26,8 @@ class State_Notice {
             'type' => $type
         ));
         $success = State_Kestrel::instance()->set($data);
-        Kohana::info("notice success:[:success] content: :data", array(
+        $level = $success ? 'info' : 'warning';
+        Kohana::$level("notice success:[:success] content: :data", array(
             ':success' => $success ? 'TRUE' : 'FALSE',
             ':data' => $data
         ));

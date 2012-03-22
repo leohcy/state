@@ -34,7 +34,7 @@ class State_Kestrel {
     }
 
     public function _failed_request($hostname, $port) {
-        Kohana::warning("kestrel request failed: $hostname:$port");
+        Kohana::notice("kestrel request failed: $hostname:$port");
         $server = $this->_current_server;
         // 把该节点设置为失效状态
         $this->_kestrel->setServerParams($server['host'], $server['port'], $server['timeout'], $server['retry_interval'], FALSE);
@@ -67,11 +67,15 @@ class State_Kestrel {
      * @return  TRUE/FALSE
      */
     public function set($data, $try = 2) {
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('Kestrel', 'set');
         $success = FALSE;
         do {
             $success = $this->_kestrel->set($this->_queue_name, $data);
             $try--;
         } while($success == FALSE && $try > 0);
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
         return $success;
     }
 

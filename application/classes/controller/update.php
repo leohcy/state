@@ -57,7 +57,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('existed'))
             Kohana::notice("[{$this->source}] new domain object detected: {$this->domain}#{$this->id}");
         // 定时
-        // TODO
+        State_Schedule::schedule($this->request->param(), "{$this->domain}/update/value", $this->id, $this->path, 'next');
         // 数据没变化则停止后续处理
         if(!$this->model('changed'))
             return;
@@ -118,7 +118,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('existed'))
             Kohana::notice("[{$this->source}] new domain object detected: {$this->domain}#{$this->id}");
         // 定时
-        // TODO
+        State_Schedule::schedule($this->request->param(), "{$this->domain}/remove/array", $this->id, $this->path, 'value');
         // 数据没变化则停止后续处理
         if(!$this->model('changed'))
             return;
@@ -164,9 +164,14 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('existed'))
             Kohana::notice("[{$this->source}] new domain object detected: {$this->domain}#{$this->id}");
         // 定时
-        // TODO
+        State_Schedule::schedule($this->request->param(), "{$this->domain}/update/decr", $this->id, $this->path, 'value');
         // 通知
         State_Notice::notice($this->domain, $this->id, $this->path, $this->model('newValue'), $this->time, State_Notice::UPDATE);
+    }
+
+    public function action_decr() {
+        $this->value = -$this->value;
+        return $this->action_incr();
     }
 
     private function diffDBRef(array $array, $another, array &$list, array $path = array(), array $level = array()) {
