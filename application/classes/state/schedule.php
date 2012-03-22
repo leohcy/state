@@ -9,9 +9,10 @@ class State_Schedule {
      * @param   $id    ID
      * @param   $path    路径
      * @param   $field    使用哪类参数传递
+     * @param   $translate    转换为哪类参数传递
      * @return  TRUE/FALSE
      */
-    public static function schedule($params, $uri, $id, $path, $field) {
+    public static function schedule($params, $uri, $id, $path, $field = 'next', $translate = 'value') {
         if(!isset($params['duration']) || !Valid::digit($params['duration']))
             return;
         $duration = (int)$params['duration'];
@@ -20,7 +21,7 @@ class State_Schedule {
             if(Text::start_with($key, $field)) {
                 $key = __($key, array(
                     '_' => '.',
-                    $field => 'value'
+                    $field => $translate
                 ));
                 $value[$key] = $val;
             }

@@ -57,7 +57,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('existed'))
             Kohana::notice("[{$this->source}] new domain object detected: {$this->domain}#{$this->id}");
         // 定时
-        State_Schedule::schedule($this->request->param(), "{$this->domain}/update/value", $this->id, $this->path, 'next');
+        State_Schedule::schedule($this->request->param(), "{$this->domain}/update/value", $this->id, $this->path);
         // 数据没变化则停止后续处理
         if(!$this->model('changed'))
             return;
@@ -107,7 +107,7 @@ class Controller_Update extends Controller_Common {
             $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update);
             $this->model('success', $result['ok'] == 1);
             $old = Arr::path($result, 'value.'.$this->path);
-            $this->model('changed', !in_array($this->value, $old));
+            $this->model('changed', !is_array($old) ? TRUE : !in_array($this->value, $old));
             $this->model('existed', (bool)Arr::path($result, 'lastErrorObject.updatedExisting'));
         } catch (Exception $e) {
             return $this->handler('cannot connect to mongodb', $e, TRUE);
@@ -118,7 +118,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('existed'))
             Kohana::notice("[{$this->source}] new domain object detected: {$this->domain}#{$this->id}");
         // 定时
-        State_Schedule::schedule($this->request->param(), "{$this->domain}/remove/array", $this->id, $this->path, 'value');
+        State_Schedule::schedule($this->request->param(), "{$this->domain}/remove/array", $this->id, $this->path, 'value', 'where');
         // 数据没变化则停止后续处理
         if(!$this->model('changed'))
             return;
@@ -172,29 +172,6 @@ class Controller_Update extends Controller_Common {
     public function action_decr() {
         $this->value = -$this->value;
         return $this->action_incr();
-    }
-
-    private function diffDBRef(array $array, $another, array &$list, array $path = array(), array $level = array()) {
-        if(isset($array['$ref'])) {// 是DBRef
-            if($array != Arr::path($another, join('.', $path))) {// 变化了
-                $list[] = array(// 加到列表里
-                    rtrim($this->path.'.'.join('.', $level), '.'),
-                    $array
-                );
-            }
-            return;
-        }
-        foreach($array as $key => $value) {
-            if(is_array($value)) {// 递归
-                array_push($path, $key);
-                if(!is_integer($key))
-                    array_push($level, $key);
-                $this->diffDBRef($value, $another, $list, $path, $level);
-                if(!is_integer($key))
-                    array_pop($level);
-                array_pop($path);
-            }
-        }
     }
 
 }

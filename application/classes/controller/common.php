@@ -135,4 +135,33 @@ abstract class Controller_Common extends Controller {
         return $array;
     }
 
+    /**
+     * 判断是否有DBRef发生变化
+     * @param   $array    源对象
+     * @param   $another    参照对象对象
+     * @param   $list    输出diff信息
+     */
+    protected function diffDBRef(array $array, $another, array &$list, array &$path = array(), array &$level = array()) {
+        if(isset($array['$ref'])) {// 是DBRef
+            if($array != Arr::path($another, join('.', $path))) {// 变化了
+                $list[] = array(// 加到列表里
+                    rtrim($this->path.'.'.join('.', $level), '.'),
+                    $array
+                );
+            }
+            return;
+        }
+        foreach($array as $key => $value) {
+            if(is_array($value)) {// 递归
+                array_push($path, $key);
+                if(!is_integer($key))
+                    array_push($level, $key);
+                $this->diffDBRef($value, $another, $list, $path, $level);
+                if(!is_integer($key))
+                    array_pop($level);
+                array_pop($path);
+            }
+        }
+    }
+
 }

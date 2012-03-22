@@ -3,6 +3,7 @@
 class State_Notice {
 
     const UPDATE = 'update';
+    const REMOVE = 'remove';
     const PUSH = 'push';
     const PULL = 'pull';
 
