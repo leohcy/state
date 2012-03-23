@@ -7,14 +7,15 @@ abstract class Controller_Common extends Controller {
      * 获取或查看model值
      * @param   $key    model的key或完整model的数组
      * @param   $value  model的value
+     * @param   $setter  是否是Setter
      * @return  单值或数组或Controller本身
      */
-    protected function model($key = NULL, $value = NULL) {
+    protected function model($key = NULL, $value = NULL, $setter = FALSE) {
         if(is_array($key))
             $this->_model = $key;
         elseif($key === NULL)
             return $this->_model;
-        elseif($value === NULL)
+        elseif($value === NULL && !$setter)
             return Arr::get($this->_model, $key);
         else
             $this->_model[$key] = $value;
@@ -142,7 +143,7 @@ abstract class Controller_Common extends Controller {
      * @param   $list    输出diff信息
      */
     protected function diffDBRef(array $array, $another, array &$list, array &$path = array(), array &$level = array()) {
-        if(isset($array['$ref'])) {// 是DBRef
+        if(MongoDBRef::isRef($array)) {// 是DBRef
             if($array != Arr::path($another, join('.', $path))) {// 变化了
                 $list[] = array(// 加到列表里
                     rtrim($this->path.'.'.join('.', $level), '.'),

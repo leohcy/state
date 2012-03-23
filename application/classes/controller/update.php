@@ -17,7 +17,7 @@ class Controller_Update extends Controller_Common {
             return FALSE;
         // 路径
         $this->path = $this->request->param('path');
-        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^[a-z0-9.]++$/iD'))
+        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^(?![.])[a-z0-9.]++(?<![.])$/iD'))
             return $this->handler("invalid path:[{$this->path}] wrong format");
         // 读取配置
         $this->prop = Kohana::$config->load('property.'.$this->domain.'.'.$this->path);

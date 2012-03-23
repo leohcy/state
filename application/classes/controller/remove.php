@@ -16,7 +16,7 @@ class Controller_Remove extends Controller_Common {
             return FALSE;
         // 路径
         $this->path = $this->request->param('path');
-        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^[a-z0-9.]++$/iD'))
+        if(!Valid::not_empty($this->path) || !Valid::regex($this->path, '/^(?![.])[a-z0-9.]++(?<![.])$/iD'))
             return $this->handler("invalid path:[{$this->path}] wrong format");
         // 读取配置
         $this->prop = Kohana::$config->load('property.'.$this->domain.'.'.$this->path);
@@ -32,9 +32,6 @@ class Controller_Remove extends Controller_Common {
     }
 
     public function action_value() {
-        // 类型检查
-        if(is_array($this->prop) && isset($this->prop['$array']))
-            return $this->handler('invalid request. use uri: /<domain>/remove/array');
         // 从数据库删除指定路径
         try {
             $update = array('$unset' => array($this->path => 1));
@@ -81,10 +78,10 @@ class Controller_Remove extends Controller_Common {
         $where = $this->convert('where', $this->prop);
         if($where === FALSE)
             return FALSE;
-        if(is_array($where))
-            $where = $this->flatten($where);
         // 从数据库中按条件删除数组中的值
         try {
+            if(is_array($where))
+                $where = Arr::flatten_path($where);
             $update = array('$pull' => array($this->path => $where));
             $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update);
             $this->model('success', $result['ok'] == 1);
@@ -92,7 +89,7 @@ class Controller_Remove extends Controller_Common {
             if(!is_array($old)) {
                 $changed = FALSE;
             } else {
-                $removed = $this->contain($old, $where);
+                $removed = Arr::contain($old, $where);
                 $changed = $removed !== FALSE;
             }
             $this->model('changed', $changed);
@@ -125,36 +122,6 @@ class Controller_Remove extends Controller_Common {
                 }
             }
         }
-    }
-
-    private function flatten(array $array, &$flat = array(), &$path = array()) {
-        foreach($array as $key => $value) {
-            array_push($path, $key);
-            if(is_array($value))
-                $this->flatten($value, $flat, $path);
-            else
-                $flat[join('.', $path)] = $value;
-            array_pop($path);
-        }
-        return $flat;
-    }
-
-    private function contain(array $array, array $condition) {
-        $result = array();
-        foreach($array as $object) {
-            $match = TRUE;
-            foreach($condition as $path => $value) {
-                if(Arr::path($object, $path) != $value) {
-                    $match = FALSE;
-                    break;
-                }
-            }
-            if($match)
-                $result[] = $object;
-        }
-        if(empty($result))
-            return FALSE;
-        return $result;
     }
 
 }

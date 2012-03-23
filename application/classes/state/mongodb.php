@@ -91,4 +91,28 @@ class State_MongoDB {
         return $result;
     }
 
+    /**
+     * 根据主键查询
+     * @param   $domain    领域对象
+     * @param   $ids    ID列表
+     * @param   $path    限定路径
+     * @param   $query    查询条件
+     * @return  返回值/NULL
+     */
+    public static function byIdList($domain, array $ids, $path, $query = array()) {
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('MongoDB', 'byId');
+        $query = array('_id' => array('$in' => $ids)) + $query;
+        $cursor = State_MongoDB::secondary($domain)->find($query, array($path => 1));
+        $result = array();
+        foreach($cursor as $doc)
+            $result[$doc['_id']] = Arr::path($doc, $path);
+        foreach($ids as $id)
+            if(!array_key_exists($id, $result))
+                $result[$id] = NULL;
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
+        return $result;
+    }
+
 }

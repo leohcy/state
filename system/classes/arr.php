@@ -581,5 +581,47 @@ class Arr {
 		}
 		return $flat;
 	}
+    
+    public static function flatten_path(array $array, array &$flat = array(), array &$path = array())
+    {
+        foreach ($array as $key => $value)
+        {
+            array_push($path, $key);
+            if (is_array($value))
+                Arr::flatten_path($value, $flat, $path);
+            else
+                $flat[join('.', $path)] = $value;
+            array_pop($path);
+        }
+        return $flat;
+    }
+
+    public static function contain(array $array, $condition)
+    {
+        $result = array();
+        foreach ($array as $object)
+        {
+            if (!is_array($condition))
+            {
+                if ($object == $condition)
+                    $result[] = $object;
+                continue;
+            }
+            $match = TRUE;
+            foreach ($condition as $path => $value)
+            {
+                if (Arr::path($object, $path) != $value)
+                {
+                    $match = FALSE;
+                    break;
+                }
+            }
+            if ($match)
+                $result[] = $object;
+        }
+        if (empty($result))
+            return FALSE;
+        return $result;
+    }
 
 } // End arr
