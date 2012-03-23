@@ -101,7 +101,7 @@ class State_MongoDB {
      */
     public static function byIdList($domain, array $ids, $path, $query = array()) {
         if(Kohana::$profiling)
-            $benchmark = Profiler::start('MongoDB', 'byId');
+            $benchmark = Profiler::start('MongoDB', 'byIdList');
         $query = array('_id' => array('$in' => $ids)) + $query;
         $cursor = State_MongoDB::secondary($domain)->find($query, array($path => 1));
         $result = array();
@@ -113,6 +113,21 @@ class State_MongoDB {
         if(isset($benchmark))
             Profiler::stop($benchmark);
         return $result;
+    }
+
+    /**
+     * 根据条件查询数量
+     * @param   $domain    领域对象
+     * @param   $query    查询条件
+     * @return  数量
+     */
+    public static function count($domain, $query) {
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('MongoDB', 'count');
+        $count = State_MongoDB::secondary($domain)->find($query)->count();
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
+        return $count;
     }
 
 }

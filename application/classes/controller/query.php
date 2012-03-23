@@ -59,7 +59,7 @@ class Controller_Query extends Controller_Common {
         // 类型检查
         if(!is_array($this->prop) || !isset($this->prop['$array']))
             return $this->handler('invalid request. use uri: /<domain>/query/value');
-        // 数据
+        // 条件
         $where = $this->convert('where', $this->prop);
         if($where === FALSE)
             return FALSE;

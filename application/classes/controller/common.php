@@ -132,7 +132,7 @@ abstract class Controller_Common extends Controller {
             $array[$param1] = $value;
         }
         if(strpos($param, '.') === FALSE && !$array)// 至少有一个参数
-            return $this->handler('invalid parameters. need at least one param');
+            return $this->handler("invalid parameters. $param: need at least one param");
         return $array;
     }
 
