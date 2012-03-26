@@ -99,7 +99,7 @@ class State_MongoDB {
      * @param   $query    查询条件
      * @return  返回值/NULL
      */
-    public static function byIdList($domain, array $ids, $path, $query = array()) {
+    public static function byIdList($domain, array $ids, $path, array $query = array()) {
         if(Kohana::$profiling)
             $benchmark = Profiler::start('MongoDB', 'byIdList');
         $query = array('_id' => array('$in' => $ids)) + $query;
@@ -121,13 +121,54 @@ class State_MongoDB {
      * @param   $query    查询条件
      * @return  数量
      */
-    public static function count($domain, $query) {
+    public static function count($domain, array $query) {
         if(Kohana::$profiling)
             $benchmark = Profiler::start('MongoDB', 'count');
         $count = State_MongoDB::secondary($domain)->find($query)->count();
         if(isset($benchmark))
             Profiler::stop($benchmark);
         return $count;
+    }
+
+    /**
+     * 根据条件查询
+     * @param   $domain    领域对象
+     * @param   $query    查询条件
+     * @param   $path    限定路径
+     * @param   $skip    翻页参数
+     * @param   $limit    翻页参数
+     * @return  $total, $result     总数，结果数组
+     */
+    public static function query($domain, array $query, $path = NULL, $skip = NULL, $limit = NULL) {
+        if(Kohana::$profiling)
+            $benchmark = Profiler::start('MongoDB', 'query');
+        $table = TRUE;
+        if(!isset($path)) {
+            $path = '_id';
+            $table = FALSE;
+        }
+        $cursor = State_MongoDB::secondary($domain)->find($query, array($path => 1));
+        if(isset($skip))
+            $cursor->skip($skip);
+        if(isset($limit))
+            $cursor->limit($limit);
+        $result = array();
+        foreach($cursor as $doc) {
+            if($table)
+                $result[$doc['_id']] = Arr::path($doc, $path);
+            else
+                $result[] = $doc['_id'];
+        }
+        if(isset($skip) || isset($limit))
+            $total = $cursor->count();
+        else
+            $total = count($result);
+        if(isset($benchmark))
+            Profiler::stop($benchmark);
+        return array(
+            $total,
+            $result
+        );
     }
 
 }

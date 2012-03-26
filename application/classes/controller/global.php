@@ -23,9 +23,13 @@ class Controller_Global extends Controller_Common {
             return FALSE;
         if(is_array($this->where)) {
             $this->where = Arr::flatten_path($this->where);
-            foreach($this->where as $path => $value) {
-                $this->where[$this->path.'.'.$path] = $value;
-                unset($this->where[$path]);
+            if(Text::start_with(key($this->where), '$')) {
+                $this->where = array($this->path => $this->where);
+            } else {
+                foreach($this->where as $path => $value) {
+                    $this->where[$this->path.'.'.$path] = $value;
+                    unset($this->where[$path]);
+                }
             }
         }
     }
@@ -35,11 +39,33 @@ class Controller_Global extends Controller_Common {
     }
 
     public function action_list() {
-
+        list($skip, $limit) = $this->extraParams();
+        // 从数据库查询id列表
+        try {
+            list($total, $result) = State_MongoDB::query($this->domain, $this->where, NULL, $skip, $limit);
+            $this->model('success', TRUE);
+            $this->model('list', $result);
+            $this->model('total', $total);
+            $this->model('skip', $skip);
+            $this->model('limit', $limit);
+        } catch (Exception $e) {
+            return $this->handler('cannot connect to mongodb', $e, TRUE);
+        }
     }
 
     public function action_table() {
-
+        list($skip, $limit) = $this->extraParams();
+        // 从数据库查询结果列表
+        try {
+            list($total, $result) = State_MongoDB::query($this->domain, $this->where, $this->path, $skip, $limit);
+            $this->model('success', TRUE);
+            $this->model('table', $result);
+            $this->model('total', $total);
+            $this->model('skip', $skip);
+            $this->model('limit', $limit);
+        } catch (Exception $e) {
+            return $this->handler('cannot connect to mongodb', $e, TRUE);
+        }
     }
 
     public function action_count() {
@@ -51,6 +77,31 @@ class Controller_Global extends Controller_Common {
         } catch (Exception $e) {
             return $this->handler('cannot connect to mongodb', $e, TRUE);
         }
+    }
+
+    private function extraParams() {
+        $page = $this->request->param('page');
+        $limit = $this->request->param('limit');
+        if($limit == 'no') {
+            $skip = NULL;
+            $limit = NULL;
+        } else {
+            if(Valid::not_empty($page) && Valid::digit($page))
+                $page = (int)$page;
+            else
+                $page = 1;
+            if(Valid::not_empty($limit) && Valid::digit($limit))
+                $limit = (int)$limit;
+            else
+                $limit = 20;
+            $skip = ($page - 1) * $limit;
+            if($skip < 0)
+                $skip = 0;
+        }
+        return array(
+            $skip,
+            $limit
+        );
     }
 
 }

@@ -584,6 +584,13 @@ class Arr {
     
     public static function flatten_path(array $array, array &$flat = array(), array &$path = array())
     {
+        if (Text::start_with(key($array), '$'))
+        {
+            if (empty($path))
+                return $array;
+            $flat[join('.', $path)] = $array;
+            return $flat;
+        }
         foreach ($array as $key => $value)
         {
             array_push($path, $key);
