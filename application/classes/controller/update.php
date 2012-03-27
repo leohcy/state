@@ -62,7 +62,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        State_Notice::notice($this->domain, $this->id, $this->path, $this->value, $this->time, State_Notice::UPDATE);
+        State_Notice::notice(State_Notice::UPDATE, $this->time, $this->domain, $this->id, $this->path, $old, $this->value);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($old)) {
             $deleted = array();
@@ -74,7 +74,7 @@ class Controller_Update extends Controller_Common {
                 $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $update);
                 if($result['ok'] == 1) {
                     // 通知
-                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PULL);
+                    State_Notice::notice(State_Notice::PULL, $this->time, $info[1]['$ref'], $info[1]['$id'], $path, $this->id);
                 }
             }
         }
@@ -91,7 +91,7 @@ class Controller_Update extends Controller_Common {
                     if(!$result['updatedExisting'])
                         Kohana::notice("[{$this->source}] new domain object detected: {$info[1]['$ref']}#{$info[1]['$id']}");
                     // 通知
-                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PUSH);
+                    State_Notice::notice(State_Notice::PUSH, $this->time, $info[1]['$ref'], $info[1]['$id'], $path, $this->id);
                 }
             }
         }
@@ -123,7 +123,7 @@ class Controller_Update extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        State_Notice::notice($this->domain, $this->id, $this->path, $this->value, $this->time, State_Notice::PUSH);
+        State_Notice::notice(State_Notice::PUSH, $this->time, $this->domain, $this->id, $this->path, $this->value);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($this->value)) {
             $added = array();
@@ -138,7 +138,7 @@ class Controller_Update extends Controller_Common {
                     if(!$result['updatedExisting'])
                         Kohana::notice("[{$this->source}] new domain object detected: {$info[1]['$ref']}#{$info[1]['$id']}");
                     // 通知
-                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PUSH);
+                    State_Notice::notice(State_Notice::PUSH, $this->time, $info[1]['$ref'], $info[1]['$id'], $path, $this->id);
                 }
             }
         }
@@ -151,9 +151,10 @@ class Controller_Update extends Controller_Common {
         // 插入数据库
         try {
             $update = array('$inc' => array($this->path => $this->value));
-            $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update, TRUE);
+            $result = State_MongoDB::findAndModify($this->domain, $this->id, $this->path, $this->time, $update);
             $this->model('success', $result['ok'] == 1);
-            $this->model('newValue', Arr::path($result, 'value.'.$this->path));
+            $oldValue = Arr::path($result, 'value.'.$this->path);
+            $this->model('newValue', $oldValue + $this->value);
             $this->model('existed', (bool)Arr::path($result, 'lastErrorObject.updatedExisting'));
         } catch (Exception $e) {
             return $this->handler('cannot connect to mongodb', $e, TRUE);
@@ -166,7 +167,7 @@ class Controller_Update extends Controller_Common {
         // 定时
         State_Schedule::schedule($this->request->param(), "{$this->domain}/update/decr", $this->id, $this->path, 'value');
         // 通知
-        State_Notice::notice($this->domain, $this->id, $this->path, $this->model('newValue'), $this->time, State_Notice::UPDATE);
+        State_Notice::notice(State_Notice::UPDATE, $this->time, $this->domain, $this->id, $this->path, $oldValue, $this->model('newValue'));
     }
 
     public function action_decr() {

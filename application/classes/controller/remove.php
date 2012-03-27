@@ -52,7 +52,7 @@ class Controller_Remove extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        State_Notice::notice($this->domain, $this->id, $this->path, $old, $this->time, State_Notice::REMOVE);
+        State_Notice::notice(State_Notice::REMOVE, $this->time, $this->domain, $this->id, $this->path, $old);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($old)) {
             $deleted = array();
@@ -64,7 +64,7 @@ class Controller_Remove extends Controller_Common {
                 $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $update);
                 if($result['ok'] == 1) {
                     // 通知
-                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PULL);
+                    State_Notice::notice(State_Notice::PULL, $this->time, $info[1]['$ref'], $info[1]['$id'], $path, $this->id);
                 }
             }
         }
@@ -106,7 +106,7 @@ class Controller_Remove extends Controller_Common {
         if(!$this->model('changed'))
             return;
         // 通知
-        State_Notice::notice($this->domain, $this->id, $this->path, $removed, $this->time, State_Notice::PULL);
+        State_Notice::notice(State_Notice::PULL, $this->time, $this->domain, $this->id, $this->path, $removed);
         // 如果有DBRef变化，则修改，并通知
         if(is_array($removed)) {
             $deleted = array();
@@ -118,7 +118,7 @@ class Controller_Remove extends Controller_Common {
                 $result = State_MongoDB::update($info[1]['$ref'], $info[1]['$id'], $update);
                 if($result['ok'] == 1) {
                     // 通知
-                    State_Notice::notice($info[1]['$ref'], $info[1]['$id'], $path, $this->id, $this->time, State_Notice::PULL);
+                    State_Notice::notice(State_Notice::PULL, $this->time, $info[1]['$ref'], $info[1]['$id'], $path, $this->id);
                 }
             }
         }
