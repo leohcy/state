@@ -4,6 +4,6 @@
  * mongodb://[username:password@]host1[:port1][,host2[:port2:],...][/db]
  */
 return array(
-    'server' => 'mongodb://localhost:27017',
+    'server' => 'mongodb://192.168.111.62:30000',
     'db' => 'state'
 );

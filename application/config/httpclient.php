@@ -1,10 +1,16 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
 return array(
-    'servers' => array( array(
-            'server' => '192.168.101.229:40551',
+    'servers' => array(
+        array(
+            'server' => '192.168.101.229:8080',
             'weight' => 1
-        )),
-    'url' => '/crontab/crontab.jsp',
+        ),
+        array(
+            'server' => '192.168.101.229:8080',
+            'weight' => 1
+        )
+    ),
+    'url' => '/crontab.jsp',
     'params' => array('method' => 'SetCrontab')
 );

@@ -80,6 +80,8 @@ class State_HttpClient {
      * @return  Response Body / FALSE
      */
     public function get(array $query, $resource, $try = 2) {
+        // 合并默认参数和传入参数
+        $query = Arr::merge($this->_params, $query);
         do {
             // 找到可用服务器
             $server = $this->lookup($resource);
@@ -89,11 +91,11 @@ class State_HttpClient {
                 ':server' => $server,
                 ':url' => $this->_url
             ));
-            // 合并默认参数和传入参数
-            $query = Arr::merge($this->_params, $query);
             try {
                 // 使用CURL执行请求
-                $response = Request::factory($url)->query($query)->execute();
+                $request = Request::factory($url)->query($query);
+                $request->client()->options(CURLOPT_TIMEOUT, 1);
+                $response = $request->execute();
                 $code = $response->status();
                 if($code == 200)
                     return $response->body();

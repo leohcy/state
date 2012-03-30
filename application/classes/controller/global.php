@@ -31,6 +31,8 @@ class Controller_Global extends Controller_Common {
                     unset($this->where[$path]);
                 }
             }
+        } else {
+            $this->where = array($this->path => $this->where);
         }
     }
 
