@@ -7,7 +7,7 @@ return array(
             'weight' => 1
         ),
         array(
-            'server' => '192.168.101.229:8080',
+            'server' => '192.168.151.159:8080',
             'weight' => 1
         )
     ),

@@ -81,12 +81,8 @@ abstract class Controller_Common extends Controller {
      * @return  FALSE   处理完毕        NULL    跳过
      */
     protected function convert($param, $prop) {
-        $value = $this->request->param(strtr($param, '.', '_'));
-        if(isset($value) && Text::start_with($value, '$')) {
-            if(Text::start_with($value, '$exists'))
-                return array('$exists' => TRUE);
-        }
         if(is_string($prop)) {// 单值类型
+            $value = $this->request->param(strtr($param, '.', '_'));
             if(!Valid::not_empty($value)) {
                 if(strpos($param, '.') !== FALSE)// 跳过
                     return NULL;

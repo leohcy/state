@@ -45,7 +45,7 @@ class State_Kestrel {
     private function addServer() {
         $server = array_shift($this->_candidate_servers);
         if($server === NULL)
-            return;
+            return FALSE;
         $server += $this->_default_config;
         $this->_current_server = $server;
         // 初始化队列名，过滤特殊字符

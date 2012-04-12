@@ -8,7 +8,7 @@ return array('servers' => array(
         ),
         array(
             'host' => '192.168.101.229',
-            'port' => 11221,
+            'port' => 11222,
             'queue' => 'osnotice'
         )
     ));
