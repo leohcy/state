@@ -13,7 +13,7 @@ class State_Kestrel {
         'host' => 'localhost',
         'port' => 11211,
         'queue' => 'default',
-        'persistent' => FALSE,
+        'persistent' => TRUE,
         'weight' => 1,
         'timeout' => 1,
         'retry_interval' => 15,

@@ -17,3 +17,10 @@ Route::set('default', '(<domain>(/<controller>(/<action>)))', array(
     'controller' => 'update',
     'action' => 'value'
 ));
+Route::set('statistics', '<controller>(/<action>)', array(
+	'controller' => 'statistics',
+	'action' => 'scheduled'
+))->defaults(array(
+	'controller' => 'statistics',
+	'action' => 'scheduled'
+));

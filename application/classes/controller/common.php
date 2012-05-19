@@ -35,7 +35,7 @@ abstract class Controller_Common extends Controller {
         Kohana::$level("[{$this->source}] {$message}", NULL, $exception);
         $datatype = $this->request->param('datatype', 'json');
         if($datatype == 'json') {
-            //$this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
+            $this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
             $this->response->body(json_encode(array(
                 'success' => FALSE,
                 'message' => $message
@@ -65,7 +65,7 @@ abstract class Controller_Common extends Controller {
     public function after() {
         $datatype = $this->request->param('datatype', 'json');
         if($datatype == 'json') {
-            //$this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
+            $this->response->headers('Content-Type', 'application/json; charset='.Kohana::$charset);
             $this->response->body(json_encode($this->model()));
             // 响应日志
             Kohana::info("[{$this->source}] response: {$this->response->body()}");
