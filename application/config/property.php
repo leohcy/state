@@ -1,12 +1,21 @@
 <?php defined('SYSPATH') or die('No direct script access.');
 
-return array('user' => array('profile' => array('olstat' => array(
-                'status' => array(
-                    'online' => 'bool',
-                    'type' => 'string'
-                ),
-                'property' => array()
-            ))));
+return array(
+	'user' => array(
+		'profile' => array(
+			'olstat' => array(
+			    'status' => array(
+			        'online' => 'bool',
+			        'type' => 'string'
+			    ),
+			    'property' => array(
+			    	'content' => 'string'
+				),
+			    'kindcount' => 'int'
+			)
+		)
+	)
+);
 /*'lvl1' => array(
  'lvl2' => array(
  'lvl3' => array(
